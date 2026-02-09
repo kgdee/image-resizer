@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Resizer</title>
+    <link rel="icon" href="favicon.png" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body class="dark-theme">
+    <div class="editor app container">
+      <h1>Image Resizer</h1>
+
+      <input type="file" id="file-input" accept="image/*" />
+
+      <div class="size-inputs">
+        <label>
+          Width (px):
+          <input type="number" id="width" />
+        </label>
+
+        <label>
+          Height (px):
+          <input type="number" id="height" />
+        </label>
+      </div>
+
+      <label>
+        <input type="checkbox" id="ratio-input" checked />
+        Lock aspect ratio
+      </label>
+
+      <div class="actions">
+        <button class="button resize" onclick="resize()">Resize</button>
+        <button class="button" onclick="download()">Download</button>
+      </div>
+
+      <div class="preview">
+        <img src="" />
+      </div>
+    </div>
+  </body>
+</html>

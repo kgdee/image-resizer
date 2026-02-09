@@ -102,6 +102,11 @@ body {
   width: max-content;
 }
 
+.size-inputs {
+  display: flex;
+  gap: 5px;
+}
+
 .actions > * {
   min-width: 100px;
 }
@@ -118,6 +123,9 @@ body {
 
 /* Medium screens (Tablets, up to 768px wide) */
 @media (max-width: 768px) {
+  .size-inputs {
+    flex-direction: column;
+  }
 }
 
 /* Small screens (Phones, up to 480px wide) */

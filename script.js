@@ -1,6 +1,8 @@
+const projectName = "image-resizer";
 const fileInput = document.getElementById("file-input");
 const widthInput = document.getElementById("width");
 const heightInput = document.getElementById("height");
+const unitSelect = document.querySelector(".unit-select select");
 const ratioInput = document.getElementById("ratio-input");
 const preview = document.querySelector(".preview img");
 
@@ -8,15 +10,35 @@ let currentFile = null;
 let originalImage = new Image();
 let resizedImage = null;
 let aspectRatio = 1;
+let selectedUnit = load("selectedUnit", "px");
+let lockRatio = load("lockRatio", true);
 
-function getFileDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => resolve(event.target.result);
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
-}
+document.addEventListener("DOMContentLoaded", () => {
+  unitSelect.value = selectedUnit;
+  ratioInput.checked = lockRatio;
+});
+
+unitSelect.addEventListener("change", () => {
+  selectedUnit = unitSelect.value;
+  save("selectedUnit", selectedUnit);
+
+  if (!currentFile) return;
+
+  const originalWidth = originalImage.naturalWidth;
+  const originalHeight = originalImage.naturalHeight;
+  let width = parseFloat(widthInput.value || originalWidth);
+  let height = parseFloat(heightInput.value || originalHeight);
+
+  if (selectedUnit === "%") {
+    // Convert px → %
+    widthInput.value = ((width / originalWidth) * 100).toFixed(0);
+    heightInput.value = ((height / originalHeight) * 100).toFixed(0);
+  } else if (selectedUnit === "px") {
+    // Convert % → px
+    widthInput.value = ((width / 100) * originalWidth).toFixed(0);
+    heightInput.value = ((height / 100) * originalHeight).toFixed(0);
+  }
+});
 
 fileInput.addEventListener("change", async () => {
   const file = fileInput.files[0];
@@ -27,46 +49,92 @@ fileInput.addEventListener("change", async () => {
 });
 
 originalImage.onload = () => {
-  widthInput.value = originalImage.width;
-  heightInput.value = originalImage.height;
   aspectRatio = originalImage.width / originalImage.height;
   preview.src = originalImage.src;
+
+  if (selectedUnit === "px") {
+    widthInput.value = originalImage.naturalWidth;
+    heightInput.value = originalImage.naturalHeight;
+  } else if (selectedUnit === "%") {
+    widthInput.value = 100;
+    heightInput.value = 100;
+  }
 };
 
 widthInput.addEventListener("input", () => {
-  if (ratioInput.checked) {
-    heightInput.value = Math.round(widthInput.value / aspectRatio);
-  }
+  adjustHeight();
 });
 
 heightInput.addEventListener("input", () => {
-  if (ratioInput.checked) {
-    widthInput.value = Math.round(heightInput.value * aspectRatio);
-  }
+  adjustWidth();
 });
 
 ratioInput.addEventListener("change", () => {
-  if (!ratioInput.checked || !originalImage.src) return;
+  lockRatio = ratioInput.checked;
+  save("lockRatio", lockRatio);
 
-  heightInput.value = Math.round(widthInput.value / aspectRatio);
+  adjustHeight();
 });
 
+function adjustWidth() {
+  if (!ratioInput.checked || !originalImage.src) return;
+
+  if (selectedUnit === "px") {
+    widthInput.value = Math.round(heightInput.value * aspectRatio);
+  } else if (selectedUnit === "%") {
+    widthInput.value = heightInput.value;
+  }
+}
+
+function adjustHeight() {
+  if (!ratioInput.checked || !originalImage.src) return;
+
+  if (selectedUnit === "px") {
+    heightInput.value = Math.round(widthInput.value / aspectRatio);
+  } else if (selectedUnit === "%") {
+    heightInput.value = widthInput.value;
+  }
+}
+
 function resize() {
+  if (!currentFile) return;
+
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  canvas.width = widthInput.value;
-  canvas.height = heightInput.value;
+  const unit = unitSelect.value; // "px" or "%"
+  let newWidth, newHeight;
 
-  ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+  if (unit === "px") {
+    // Direct pixel values
+    newWidth = parseInt(widthInput.value, 10);
+    newHeight = parseInt(heightInput.value, 10);
+  } else if (unit === "%") {
+    // Percentage based on original image size
+    const percentWidth = parseFloat(widthInput.value) / 100;
+    const percentHeight = parseFloat(heightInput.value) / 100;
+
+    newWidth = originalImage.naturalWidth * percentWidth;
+    newHeight = originalImage.naturalHeight * percentHeight;
+  }
+
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+
+  ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
 
   resizedImage = canvas.toDataURL("image/png");
   preview.src = resizedImage;
 }
 
-function download() {
-  const link = document.createElement("a");
-  link.download = `resized_${currentFile.name}`;
-  link.href = resizedImage;
-  link.click();
+async function download() {
+  if (!currentFile || !resizedImage) return;
+
+  const a = document.createElement("a");
+  a.href = resizedImage;
+  a.download = `resized_${currentFile.name}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(resizedImage);
 }

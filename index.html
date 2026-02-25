@@ -7,6 +7,7 @@
     <link rel="icon" href="favicon.png" type="image/x-icon" />
     <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
     <link rel="stylesheet" href="style.css" />
+    <script src="utils.js" defer></script>
     <script src="script.js" defer></script>
   </head>
   <body class="dark-theme">
@@ -17,18 +18,26 @@
 
       <div class="size-inputs">
         <label>
-          Width (px):
+          Width:
           <input type="number" id="width" />
         </label>
 
         <label>
-          Height (px):
+          Height:
           <input type="number" id="height" />
         </label>
       </div>
 
+      <label class="unit-select">
+        Length unit:
+        <select>
+          <option value="px">px</option>
+          <option value="%">%</option>
+        </select>
+      </label>
+
       <label>
-        <input type="checkbox" id="ratio-input" checked />
+        <input type="checkbox" id="ratio-input" />
         Lock aspect ratio
       </label>
 
